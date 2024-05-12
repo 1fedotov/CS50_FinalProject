@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="min-vh-100 d-flex flex-column">
+  <div class="row flex-grow-1">
+    <div class="col-md-2 border">
+      <nav class="nav flex-column">
+        <h6>Tools</h6>
+        <a class="nav-link active" aria-current="page" href="#">Active</a>
+        <a class="nav-link" href="#">Link</a>
+        <a class="nav-link" href="#">Link</a>
+        <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+      </nav>
+    </div>
+    <svg class="col-md-10 border" id="tree-display"></svg>
+  </div>
+</div>
+<div id="context-menu" class="btn-group-vertical" role="group" aria-label="Vertical button group" style="position: absolute">
+  <button id="edit-button" type="button" class="btn btn-light">Edit person</button>
+  <button id="add-button" type="button" class="btn btn-light">Add parents</button>
+  <button id="delete-button" type="button" class="btn btn-light">Remove branch</button>
+</div>
+
+{% endblock %}

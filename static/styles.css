@@ -1,0 +1,59 @@
+.navbar-brand {
+  font-size: 30px;
+  font-family:'Whisper'
+}
+
+/* from AI to style SVG and nav */
+.container {
+  align-items: center;
+  justify-items: center;
+  border-color: black;
+  border-style: dashed;
+}
+
+
+.container-treengine {
+  display: flex;
+  height: 100%;
+  border-color: black;
+  border-style: dashed;
+}
+
+.nav {
+  padding-top: 10%;
+}
+  
+#mySVG {
+  border-color: black;
+  border-style: dashed;
+}
+
+.link {
+  fill: none;
+  stroke: #555;
+  stroke-width: 2px;
+}
+  
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+  
+.node text {
+  font: 12px sans-serif;
+}
+
+.context-menu {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  padding: 8px;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.hidden {
+  display: none;
+}
