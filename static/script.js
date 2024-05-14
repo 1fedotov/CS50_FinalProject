@@ -64,7 +64,6 @@ function update(root)
     .attr("class", "node")
     .attr("transform", d => `translate(${d.x},${-d.y})`);
 
-  // Remove elements that no longer have data  
   node.exit().remove();
 
   node.append("circle")
@@ -147,6 +146,13 @@ function showContextMenu(circle, node)
   contextMenu.select("#add-button").on("click", function() {
     addNodes(node);
   })
+  contextMenu.select("#delete-button").on("click", function() {
+    deleteNode(node);
+  })
+  // contextMenu.select("#edit-button").on("click", function() {
+  //   editNode(node);
+  // })
+
 
 }
 
@@ -186,6 +192,8 @@ function addNodes(node)
   data.children.push({ name: "Parent1"});
   data.children.push({ name: "Parent2"});
 
+  console.log(root.descendants());
+
   root = d3.hierarchy(root.data);
 
   console.log(root.descendants());
@@ -193,12 +201,46 @@ function addNodes(node)
   update(root);
 }
 // TO DO!!
-function removeNode()
+function deleteNode(node)
 {
+  let data = node.datum().data;
+  let id = 0;
+  parentNode = node.datum().parent;
 
+  console.log(data.children);
+
+  if(data.name == "Root")
+    {
+      console.log("Can't delete root node!");
+      return false;
+    }
+
+  if(data.children && data.children.length != 0)
+    {
+      console.log("Can't delete a node with parents! Remove parents first.");
+      return false;
+    }
+
+  for (let i = 0; i < parentNode.children.length; i++) {
+    if (parentNode.children[i].data.name === data.name) {
+      id = i;
+    }
+  }
+
+  console.log("Removing node: " + parentNode.children[id].data.name)
+  parentNode.data.children.splice(id, 1); // Remove the node
+  console.log("branch removed!");
+
+  console.log(root.descendants());
+
+  root = d3.hierarchy(root.data);
+
+  console.log(root.descendants());
+  
+  update(root);
 }
 
-function editNode()
-{
+// function editNode()
+// {
 
-}
+// }
