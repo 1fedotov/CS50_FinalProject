@@ -4,16 +4,16 @@
 const initialScale = 1;
 
 // Initialize variables
-var svg = null;
-var svgRect = null;
-var contextMenu = null;
-var treeContainer = null;
-var width = 0;
-var height = 0;
-var currentScale = initialScale;
-var selectedCircle = null;
-var initialTransform = null;
-var root = null;
+let svg = null;
+let svgRect = null;
+let contextMenu = null;
+let treeContainer = null;
+let width = 0;
+let height = 0;
+let currentScale = initialScale;
+let selectedCircle = null;
+let initialTransform = null;
+let root = null;
 
 //-----------------------------------------------------//
 
@@ -23,11 +23,13 @@ document.addEventListener("DOMContentLoaded", function()
   contextMenu = d3.select("#context-menu");
   treeContainer = svg.append("g");
 
-  d3.json("/static/data.json").then(function(treeData)
+  console.log(tree_data);
+
+  //d3.json(tree_data).then(function(treeData)
   {
-    root = d3.hierarchy(treeData);
+    root = d3.hierarchy(tree_data);
     update(root);
-  })
+  }
     
   svg.on("click", hideContextMenu);
   //window.addEventListener("resize", update(treeData));

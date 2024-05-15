@@ -1,3 +1,4 @@
+import json 
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from sqlalchemy import create_engine 
@@ -5,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, has_user
+from helpers import login_required, has_user, person_struct
 
 # Configure application
 app = Flask(__name__)
@@ -147,4 +148,29 @@ def families():
 @app.route("/treengine", methods=["GET", "POST"])
 @login_required
 def treengine():
-    return render_template("treengine.html")
+    if request.method == "GET":
+        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+        result = trees.fetchone()
+
+        if (result == None):
+            person = person_struct.copy()
+            person["children"] = []
+            for i in range(2):
+                child = person_struct.copy()
+                child["id"] = i + 1
+                person["children"].append(child)
+
+            tree_data = person
+            
+            name = "template" + str(session["user_id"])
+            with open('trees/' + name + '.json', 'w') as f:
+                json.dump(tree_data, f)
+
+            tree_data = json.dumps(tree_data)
+            
+        #else:
+
+
+
+
+    return render_template("treengine.html", tree_data=tree_data)

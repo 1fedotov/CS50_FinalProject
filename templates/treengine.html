@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 
 {% block body %}
+<script> 
+  let tree_data = JSON.parse('{{ tree_data | safe }}');
+</script>
 <div class="min-vh-100 d-flex flex-column">
   <div class="row flex-grow-1">
     <div class="col-md-2 border">

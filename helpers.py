@@ -2,6 +2,13 @@ from flask import redirect, render_template, request, session
 from functools import wraps
 from sqlalchemy.sql import text
 
+
+
+person_struct = {
+    "id" : 0,
+    "name" : "person"
+}
+
 def login_required(f):
     """
     Decorate routes to require login.
@@ -23,3 +30,4 @@ def has_user(username, db):
     if name.all():
         return True
     return False
+
