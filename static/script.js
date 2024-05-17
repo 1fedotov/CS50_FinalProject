@@ -7,7 +7,7 @@ const initialScale = 1;
 let svg = null;
 let svgRect = null;
 let contextMenu = null;
-let treeContainer = null;
+let treeContainer = null;  // Using treeContainer for panning and zooming functionality
 let width = 0;
 let height = 0;
 let currentScale = initialScale;
@@ -19,23 +19,27 @@ let root = null;
 
 document.addEventListener("DOMContentLoaded", function()
 {
+  // Selecting main components
   svg = d3.select("#tree-display");
   contextMenu = d3.select("#context-menu");
   treeContainer = svg.append("g");
 
+  // Delete these lines later
   console.log(tree_data);
-
   //d3.json(tree_data).then(function(treeData)
+
   {
     root = d3.hierarchy(tree_data);
     update(root);
   }
     
   svg.on("click", hideContextMenu);
+  // If have time write code for window resize
   //window.addEventListener("resize", update(treeData));
 })
 
-
+// Function mainly copied from d3.js template and by means of AI + of my own understanding
+// modified for the current application of tree visualization
 function update(root)
 {
   svg = d3.select("#tree-display");
@@ -48,10 +52,11 @@ function update(root)
   treeContainer.attr("transform", `translate(${initialX},${initialY})`);
   initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(initialScale);
 
-  let treeLayout = d3.tree().size([height, width*0.25]);
+  let treeLayout = d3.tree().size([height, width*0.25]); // Setting tree size
 
-  treeLayout(root);
+  treeLayout(root); // Some treeLayout magic
 
+  // Initializing links
   const links = treeContainer.selectAll(".link")
     .data(root.links())
     .enter().append("path")
@@ -60,21 +65,24 @@ function update(root)
       .x(d => d.x)
       .y(d => -d.y));
   
+  // Initializing nodes which contains graphic element + circle + text for each node object
+  // Why do we need to add "g" element first, I don't know....   
   const node = treeContainer.selectAll(".node")
     .data(root.descendants())
     .enter().append("g")
     .attr("class", "node")
     .attr("transform", d => `translate(${d.x},${-d.y})`);
 
-  node.exit().remove();
+  
+  node.exit().remove(); // Some magic for deleting nodes "without information", AI suggestion
 
   node.append("circle")
     .attr("r", 10)
-    .on("contextmenu", function(event) {
+    .on("contextmenu", function(event) {  // Binding event for right click on circle
       let node = d3.select(this.parentNode);
       showContextMenu(d3.select(this), node);
     })
-    .on("mouseenter", function(event) {
+    .on("mouseenter", function(event) { // Binding event for circle being hovered by mouse
       if (selectedCircle == null)
       {
         console.log("Circle hovered");
@@ -103,6 +111,7 @@ function update(root)
   //     .duration(750)
   //     .attr("transform", d => `translate(${d.x},${-d.y})`);
 
+  // Adding zoom and panning functionality, used AI for a direction and write ~70% of my own
   var zoom = d3.zoom()      
     .on("zoom", function(event) {
       // Hide the menu  
@@ -128,7 +137,7 @@ function update(root)
   
     })
   
-  
+  // Using initial transform for preventing tree from "teleporting" while first panning
   svg.call(zoom).call(zoom.transform, initialTransform);
 }
 
@@ -194,22 +203,23 @@ function addNodes(node)
   data.children.push({ name: "Parent1"});
   data.children.push({ name: "Parent2"});
 
-  console.log(root.descendants());
-
   root = d3.hierarchy(root.data);
 
-  console.log(root.descendants());
+  new_data = toList(root.data)
+
+  console.log(new_data);
+
+  postChanges(new_data);
 
   update(root);
 }
-// TO DO!!
+// Deleting node functionality, still need to read more about data and .data
+// While coding first times messed up with them
 function deleteNode(node)
 {
   let data = node.datum().data;
   let id = 0;
   parentNode = node.datum().parent;
-
-  console.log(data.children);
 
   if(data.name == "Root")
     {
@@ -233,12 +243,14 @@ function deleteNode(node)
   parentNode.data.children.splice(id, 1); // Remove the node
   console.log("branch removed!");
 
-  console.log(root.descendants());
-
   root = d3.hierarchy(root.data);
 
-  console.log(root.descendants());
-  
+  new_data = toList(root.data)
+
+  console.log(new_data);
+
+  postChanges(new_data);
+
   update(root);
 }
 
@@ -246,3 +258,38 @@ function deleteNode(node)
 // {
 
 // }
+
+// My own creation, transfer from d3.hierarchy to JSON-like structure
+function toList(root)
+{
+  let data = {
+    id : root.id,
+    name : root.name,
+  }
+
+  if (root.children)
+    {
+      data.children = [];
+      for (let i = 0; i < root.children.length; i++)
+        {
+          data.children.push(toList(root.children[i]));
+        }
+    }
+
+  return data;
+}
+
+// Completely taken from CS50.ai, still need to study this functionality
+function postChanges(data)
+{
+  fetch('/treengine', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch((error) => console.error('Error:', error));
+}

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, has_user, person_struct
+from helpers import login_required, has_user, create_tree, get_tree, update_tree
 
 # Configure application
 app = Flask(__name__)
@@ -148,29 +148,32 @@ def families():
 @app.route("/treengine", methods=["GET", "POST"])
 @login_required
 def treengine():
+    # User try to access the page
     if request.method == "GET":
+        # Check whether current user has any tree
         trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-        result = trees.fetchone()
+        result = trees.fetchall()
 
-        if (result == None):
-            person = person_struct.copy()
-            person["children"] = []
-            for i in range(2):
-                child = person_struct.copy()
-                child["id"] = i + 1
-                person["children"].append(child)
+        # If not then generate new tree, save .json file, then add to the table 
+        if (len(result) == 0):
+            tree_data = create_tree("newTree", str(session["user_id"]), db)
 
-            tree_data = person
-            
-            name = "template" + str(session["user_id"])
-            with open('trees/' + name + '.json', 'w') as f:
-                json.dump(tree_data, f)
+        # If user has tree, then send the most recent modified tree    
+        else:
+            # Read about result object, it's structure and how to access element by column name, not index???
+            tree_data = get_tree(result[0][1])
+            print(tree_data)
+        
+    
+    # User send request to save a file or create new tree
+    if request.method == "POST":
+        tree_data = request.get_json()
 
-            tree_data = json.dumps(tree_data)
-            
-        #else:
+        # Check whether current user has any tree
+        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+        result = trees.fetchall()
 
-
-
+        if (tree_data):
+            update_tree(result[0][1], tree_data)
 
     return render_template("treengine.html", tree_data=tree_data)
