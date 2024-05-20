@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, has_user, create_tree, get_tree, update_tree
+from helpers import login_required, has_user, create_tree, get_tree, update_tree, get_last_tree
 
 # Configure application
 app = Flask(__name__)
@@ -161,7 +161,7 @@ def treengine():
         # If user has tree, then send the most recent modified tree    
         else:
             # Read about result object, it's structure and how to access element by column name, not index???
-            tree_data = get_tree(result[0][1])
+            tree_data = get_last_tree(db)
             print(tree_data)
         
     
@@ -174,6 +174,6 @@ def treengine():
         result = trees.fetchall()
 
         if (tree_data):
-            update_tree(result[0][1], tree_data)
+            update_tree(result[0][1], tree_data, db)
 
     return render_template("treengine.html", tree_data=tree_data)

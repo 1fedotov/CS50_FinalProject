@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function()
   treeContainer = svg.append("g");
 
   // Delete these lines later
-  console.log(tree_data);
+  //console.log(tree_data);
   //d3.json(tree_data).then(function(treeData)
 
   {
@@ -205,11 +205,7 @@ function addNodes(node)
 
   root = d3.hierarchy(root.data);
 
-  new_data = toList(root.data)
-
-  console.log(new_data);
-
-  postChanges(new_data);
+  postChanges(root.data);
 
   update(root);
 }
@@ -244,12 +240,8 @@ function deleteNode(node)
   console.log("branch removed!");
 
   root = d3.hierarchy(root.data);
-
-  new_data = toList(root.data)
-
-  console.log(new_data);
-
-  postChanges(new_data);
+  
+  postChanges(root.data);
 
   update(root);
 }
@@ -260,26 +252,27 @@ function deleteNode(node)
 // }
 
 // My own creation, transfer from d3.hierarchy to JSON-like structure
-function toList(root)
-{
-  let data = {
-    id : root.id,
-    name : root.name,
-  }
+// It turns out that root.data is already enough to use, it is already a JSON, but I leave it as a reminder
+// function toList(root)
+// {
+//   let data = {
+//     id : root.id,
+//     name : root.name,
+//   }
 
-  if (root.children)
-    {
-      data.children = [];
-      for (let i = 0; i < root.children.length; i++)
-        {
-          data.children.push(toList(root.children[i]));
-        }
-    }
+//   if (root.children)
+//     {
+//       data.children = [];
+//       for (let i = 0; i < root.children.length; i++)
+//         {
+//           data.children.push(toList(root.children[i]));
+//         }
+//     }
 
-  return data;
-}
+//   return data;
+// }
 
-// Completely taken from CS50.ai, still need to study this functionality
+// Completely taken from CS50.ai, still need to study this function
 function postChanges(data)
 {
   fetch('/treengine', {
