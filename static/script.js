@@ -103,7 +103,7 @@ function update(root)
     .attr("dy", "0.35em")
     .attr("x", d => d.children ? -13 : 13)
     .style("text-anchor", d => d.children ? "end" : "start")
-    .text(d => d.data.name);   
+    .text(d => d.data.name.first + " " + d.data.name.last);   
 
   // Merge new and updated elements
   // node.merge(node.select("g"))
@@ -163,8 +163,6 @@ function showContextMenu(circle, node)
   // contextMenu.select("#edit-button").on("click", function() {
   //   editNode(node);
   // })
-
-
 }
 
 function hideContextMenu() 

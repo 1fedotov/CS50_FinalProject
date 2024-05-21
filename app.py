@@ -167,13 +167,24 @@ def treengine():
     
     # User send request to save a file or create new tree
     if request.method == "POST":
-        tree_data = request.get_json()
 
-        # Check whether current user has any tree
-        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-        result = trees.fetchall()
+        if "create-tree" in request.form:
+            print("Creating a tree")
 
-        if (tree_data):
-            update_tree(result[0][1], tree_data, db)
+            tree_data = create_tree("newTree", str(session["user_id"]), db)
 
-    return render_template("treengine.html", tree_data=tree_data)
+            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+            result = trees.fetchall()
+
+        else:    
+            print("updating tree")
+            tree_data = request.get_json()
+
+            # Check whether current user has any tree
+            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+            result = trees.fetchall()
+
+            if (tree_data):
+                update_tree(result[0][1], tree_data, db)
+
+    return render_template("treengine.html", tree_data=tree_data, result=result)

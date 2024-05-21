@@ -8,11 +8,21 @@
   <div class="row flex-grow-1">
     <div class="col-md-2 border">
       <nav class="nav flex-column">
-        <h6>Tools</h6>
-        <a class="nav-link active" aria-current="page" href="#">Active</a>
-        <a class="nav-link" href="#">Link</a>
-        <a class="nav-link" href="#">Link</a>
-        <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+        <form action="/treengine" method="POST">
+          <button id="create-button" type="submit" name="create-tree" class="btn btn-light">Create Tree</button>
+        </form>
+        <!-- Default dropend button -->
+        <div class="btn-group dropend">
+          <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Trees
+          </button>
+          <ul class="dropdown-menu">
+            <!-- Dropdown menu links -->
+            {% for row in result %}
+              <li><a class="dropdown-item" href="/treengine" name="select-tree" value="{{ row.tree_name }}">{{ row.tree_name }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
       </nav>
     </div>
     <svg class="col-md-10 border" id="tree-display"></svg>

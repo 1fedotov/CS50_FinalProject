@@ -4,9 +4,23 @@ from sqlalchemy.sql import text
 import json 
 import datetime
 
+name = {
+    "first" : "name",
+    "last" : "surname"
+}
+
+birthdate = {
+    "year" : 1900,
+    "month" : 1,
+    "day" : 1,
+}
+
 person_struct = {
     "id" : 0,
-    "name" : "person"
+    "name" : name,
+    "birthdate" : birthdate,
+    "biography" : "Biography...",
+    "photo" : ""
 }
 
 def login_required(f):
@@ -51,7 +65,7 @@ def create_tree(name, user_id, db):
         json.dump(tree_data, f)
 
     # Fill the table with tree info
-    db.execute(text("INSERT INTO trees (user_id, tree_name, tree_path) VALUES(:user_id, :tree_name, :tree_path, :last_update)"), 
+    db.execute(text("INSERT INTO trees (user_id, tree_name, tree_path, last_update) VALUES(:user_id, :tree_name, :tree_path, :last_update)"), 
                [{"user_id" : user_id, "tree_name" : tree_name, "tree_path" : tree_path, "last_update" : datetime.datetime.now()}])
     db.commit()
 
