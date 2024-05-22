@@ -19,7 +19,11 @@
           <ul class="dropdown-menu">
             <!-- Dropdown menu links -->
             {% for row in result %}
-              <li><a class="dropdown-item" href="/treengine" name="select-tree" value="{{ row.tree_name }}">{{ row.tree_name }}</a></li>
+              <li><a class="dropdown-item" href="/treengine?tree_id={{ row.id }}">{{ row.tree_name }}</a></li>
+              <form action="/treengine" method="POST">
+                <button id="rename-button" type="submit" name="rename-tree" value="{{ row.id }}" class="btn btn-light">R</button>
+                <button id="delete-button" type="submit" name="delete-tree" value="{{ row.id }}" class="btn btn-light">D</button>
+              </form>
             {% endfor %}
           </ul>
         </div>

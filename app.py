@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, has_user, create_tree, get_tree, update_tree, get_last_tree
+from helpers import login_required, has_user, create_tree, get_tree, update_tree, get_last_tree, delete_tree
 
 # Configure application
 app = Flask(__name__)
@@ -150,19 +150,26 @@ def families():
 def treengine():
     # User try to access the page
     if request.method == "GET":
-        # Check whether current user has any tree
-        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-        result = trees.fetchall()
+        if request.args.get('tree_id'):
+            print("selecting tree" + request.args.get('tree_id'))
+            tree_data = get_tree(request.args.get('tree_id'))
+            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+            result = trees.fetchall()
 
-        # If not then generate new tree, save .json file, then add to the table 
-        if (len(result) == 0):
-            tree_data = create_tree("newTree", str(session["user_id"]), db)
-
-        # If user has tree, then send the most recent modified tree    
         else:
-            # Read about result object, it's structure and how to access element by column name, not index???
-            tree_data = get_last_tree(db)
-            print(tree_data)
+            # Check whether current user has any tree
+            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+            result = trees.fetchall()
+
+            # If not then generate new tree, save .json file, then add to the table 
+            if (len(result) == 0):
+                tree_data = create_tree("newTree", str(session["user_id"]), db)
+
+            # If user has tree, then send the most recent modified tree    
+            else:
+                # Read about result object, it's structure and how to access element by column name, not index???
+                tree_data = get_last_tree(db)
+                print(tree_data)
         
     
     # User send request to save a file or create new tree
@@ -170,21 +177,23 @@ def treengine():
 
         if "create-tree" in request.form:
             print("Creating a tree")
-
             tree_data = create_tree("newTree", str(session["user_id"]), db)
 
-            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-            result = trees.fetchall()
+
+        elif "delete-tree" in request.form:
+            id = request.form.get("delete-tree")
+            delete_tree(id, db)
+            tree_data = get_last_tree(db)
 
         else:    
             print("updating tree")
             tree_data = request.get_json()
 
-            # Check whether current user has any tree
-            trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-            result = trees.fetchall()
 
             if (tree_data):
                 update_tree(result[0][1], tree_data, db)
+
+        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+        result = trees.fetchall()
 
     return render_template("treengine.html", tree_data=tree_data, result=result)
