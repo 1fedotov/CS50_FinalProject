@@ -94,7 +94,7 @@ def get_last_tree(db):
     result = id.fetchone()
     return get_tree(str(result[0]))
 
-def change_tree_name(name, id, db):
+def change_tree_name(id, name, db):
     db.execute(text("UPDATE trees SET tree_name = :tree_name WHERE user_id = :user_id AND id = :id"), [{"tree_name" : name,"user_id" : session["user_id"], "id" : id}])
     db.commit()
 

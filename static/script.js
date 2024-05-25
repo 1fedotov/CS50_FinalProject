@@ -139,6 +139,36 @@ function update(root)
   
   // Using initial transform for preventing tree from "teleporting" while first panning
   svg.call(zoom).call(zoom.transform, initialTransform);
+
+  // Add tree rename button functionality
+  document.getElementById("rename-button").addEventListener("click", function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    let treeId = this.value;
+    let aTag = this.parentElement.previousElementSibling;
+    let treeName = aTag.textContent;
+    let href = aTag.getAttribute("href");
+    aTag.innerHTML = `<input type="text" value="${treeName}">`;
+
+    aTag.addEventListener("click", function(event) {
+      event.preventDefault();
+    })
+
+    let input = aTag.querySelector("input");
+    input.addEventListener("blur", function (event) {
+      //event.preventDefault();
+      let newTreeName = this.value;
+      aTag.innerHTML = `<a class="dropdown-item" href="${href}">${newTreeName}</a>`;
+      postName(newTreeName, treeId);
+    })
+
+    input.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        this.blur();
+      }
+    });
+  })
 }
 
 function showContextMenu(circle, node)
@@ -282,5 +312,17 @@ function postChanges(data)
   })
   .then(response => response.json())
   .then(data => console.log(data))
+  .catch((error) => console.error('Error:', error));
+}
+
+function postName(name, id)
+{
+  fetch('/treengine', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ "name" : name, "id" : id})
+  })
   .catch((error) => console.error('Error:', error));
 }

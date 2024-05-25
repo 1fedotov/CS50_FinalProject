@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, has_user, create_tree, get_tree, update_tree, get_last_tree, delete_tree
+from helpers import login_required, has_user, create_tree, get_tree, update_tree, get_last_tree, delete_tree, change_tree_name
 
 # Configure application
 app = Flask(__name__)
@@ -151,7 +151,6 @@ def treengine():
     # User try to access the page
     if request.method == "GET":
         if request.args.get('tree_id'):
-            print("selecting tree" + request.args.get('tree_id'))
             tree_data = get_tree(request.args.get('tree_id'))
             trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
             result = trees.fetchall()
@@ -176,7 +175,6 @@ def treengine():
     if request.method == "POST":
 
         if "create-tree" in request.form:
-            print("Creating a tree")
             tree_data = create_tree("newTree", str(session["user_id"]), db)
 
 
@@ -186,11 +184,11 @@ def treengine():
             tree_data = get_last_tree(db)
 
         else:    
-            print("updating tree")
             tree_data = request.get_json()
 
-
-            if (tree_data):
+            if (tree_data["name"]):
+                change_tree_name(tree_data["id"], tree_data["name"], db)
+            elif (tree_data):
                 update_tree(result[0][1], tree_data, db)
 
         trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
