@@ -7,6 +7,7 @@ const initialScale = 1;
 let svg = null;
 let svgRect = null;
 let contextMenu = null;
+let sidePanel = null;
 let treeContainer = null;  // Using treeContainer for panning and zooming functionality
 let width = 0;
 let height = 0;
@@ -22,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function()
   // Selecting main components
   svg = d3.select("#tree-display");
   contextMenu = d3.select("#context-menu");
+  sidePanel = d3.select("#edit-person");
   treeContainer = svg.append("g");
 
   // Delete these lines later
@@ -33,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function()
     update(root);
   }
     
-  svg.on("click", hideContextMenu);
+  svg.on("click", hideAll);
   // If have time write code for window resize
   //window.addEventListener("resize", update(treeData));
 })
@@ -115,7 +117,7 @@ function update(root)
   var zoom = d3.zoom()      
     .on("zoom", function(event) {
       // Hide the menu  
-      hideContextMenu();
+      hideAll();
   
       let transform = d3.event.transform;
       
@@ -141,39 +143,45 @@ function update(root)
   svg.call(zoom).call(zoom.transform, initialTransform);
 
   // Add tree rename button functionality
-  document.getElementById("rename-button").addEventListener("click", function(event) {
-    event.preventDefault();
-    event.stopPropagation();
+  let buttons = document.getElementsByName("rename-tree");
+  for(let i = 0; i < buttons.length; i++)
+    {
+      buttons[i].addEventListener("click", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        let treeId = this.value;
+        let aTag = this.parentElement.previousElementSibling;
+        let treeName = aTag.textContent;
+        let href = aTag.getAttribute("href");
+        aTag.innerHTML = `<input type="text" value="${treeName}">`;
     
-    let treeId = this.value;
-    let aTag = this.parentElement.previousElementSibling;
-    let treeName = aTag.textContent;
-    let href = aTag.getAttribute("href");
-    aTag.innerHTML = `<input type="text" value="${treeName}">`;
-
-    aTag.addEventListener("click", function(event) {
-      event.preventDefault();
-    })
-
-    let input = aTag.querySelector("input");
-    input.addEventListener("blur", function (event) {
-      //event.preventDefault();
-      let newTreeName = this.value;
-      aTag.innerHTML = `<a class="dropdown-item" href="${href}">${newTreeName}</a>`;
-      postName(newTreeName, treeId);
-    })
-
-    input.addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        this.blur();
-      }
-    });
-  })
+        aTag.addEventListener("click", function(event) {
+          event.preventDefault();
+        })
+    
+        let input = aTag.querySelector("input");
+        input.addEventListener("blur", function (event) {
+          //event.preventDefault();
+          let newTreeName = this.value;
+          aTag.innerHTML = `<a class="dropdown-item" href="${href}">${newTreeName}</a>`;
+          postName(newTreeName, treeId);
+        })
+    
+        input.addEventListener("keydown", function(event) {
+          if (event.key === "Enter") {
+            this.blur();
+          }
+        });
+      })
+    }
 }
 
 function showContextMenu(circle, node)
 {
   d3.event.preventDefault();
+
+  hideElement(sidePanel);
 
   resetCircle();
   selectedCircle = circle;
@@ -190,15 +198,21 @@ function showContextMenu(circle, node)
   contextMenu.select("#delete-button").on("click", function() {
     deleteNode(node);
   })
-  // contextMenu.select("#edit-button").on("click", function() {
-  //   editNode(node);
-  // })
+  contextMenu.select("#edit-button").on("click", function(event) {
+    editNode(node);
+  })
 }
 
-function hideContextMenu() 
+function hideElement(elmt)
 {
-  contextMenu.style("display", "none");
-  resetCircle();
+  elmt.style("display", "none");
+  resetCircle()
+}
+
+function hideAll()
+{
+  hideElement(contextMenu);
+  hideElement(sidePanel);
 }
 
 function selectCircle()
@@ -274,31 +288,43 @@ function deleteNode(node)
   update(root);
 }
 
-// function editNode()
-// {
+function editNode(node)
+{
+  let data = node.datum().data;
 
-// }
+  hideElement(contextMenu);
 
-// My own creation, transfer from d3.hierarchy to JSON-like structure
-// It turns out that root.data is already enough to use, it is already a JSON, but I leave it as a reminder
-// function toList(root)
-// {
-//   let data = {
-//     id : root.id,
-//     name : root.name,
-//   }
+  console.log("edit person");
+  console.log(sidePanel);
+  
+  sidePanel.style("left", (d3.event.pageX) + "px")
+  .style("top", (d3.event.pageY) + "px")
+  .style("display", "block");
 
-//   if (root.children)
-//     {
-//       data.children = [];
-//       for (let i = 0; i < root.children.length; i++)
-//         {
-//           data.children.push(toList(root.children[i]));
-//         }
-//     }
+  console.log(data.name.first);
+  console.log(data.name.last);
 
-//   return data;
-// }
+  document.getElementById("fname").value = data.name.first;
+  document.getElementById("lname").value = data.name.last;
+
+  document.getElementById("update-person").addEventListener("submit", updatePerson)
+
+  function updatePerson(event)
+  {
+    event.preventDefault();
+
+    data.name.first = document.getElementById("fname").value;
+    data.name.last = document.getElementById("lname").value;
+
+    root = d3.hierarchy(root.data);
+
+    postChanges(root.data);
+  
+    update(root);
+
+    document.getElementById("update-person").removeEventListener("submit", updatePerson);
+  }
+}
 
 // Completely taken from CS50.ai, still need to study this function
 function postChanges(data)
@@ -322,7 +348,9 @@ function postName(name, id)
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ "name" : name, "id" : id})
+    body: JSON.stringify({ "tree_name" : name, "id" : id})
   })
+  .then(response => response.json())
+  .then(data => console.log(data))
   .catch((error) => console.error('Error:', error));
 }

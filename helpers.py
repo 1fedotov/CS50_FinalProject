@@ -19,9 +19,6 @@ birthdate = {
 person_struct = {
     "id" : 0,
     "name" : name,
-    "birthdate" : birthdate,
-    "biography" : "Biography...",
-    "photo" : ""
 }
 
 def login_required(f):
@@ -72,12 +69,15 @@ def create_tree(name, user_id, db):
     with open(tree_path, 'w') as f:
         json.dump(tree_data, f)
 
+    session["tree_id"] = result[0]
+
     return json.dumps(tree_data)
 
 
 def get_tree(id):
     with open('trees/' + id + '.json', 'r') as f:
         tree_data = json.load(f) # From tutorial
+        session["tree_id"] = id
         return json.dumps(tree_data) # And why do we need always use .dumps? If not using then tree_data is not correct at script
     
 

@@ -39,5 +39,15 @@
   <button id="add-button" type="button" class="btn btn-light">Add parents</button>
   <button id="delete-button" type="button" class="btn btn-light">Remove branch</button>
 </div>
+<div id="edit-person" class="side-panel">
+  <h1>Edit person</h1>
+  <form method="POST" action="/treengine" id="update-person">
+    <label for="fname">First name:</label><br>
+    <input type="text" id="fname" name="fname" value=""><br>
+    <label for="lname">Last name:</label><br>
+    <input type="text" id="lname" name="lname" value=""><br>
+    <input type="submit" value="Submit">
+  </form>
+</div>
 
 {% endblock %}

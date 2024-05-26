@@ -168,7 +168,6 @@ def treengine():
             else:
                 # Read about result object, it's structure and how to access element by column name, not index???
                 tree_data = get_last_tree(db)
-                print(tree_data)
         
     
     # User send request to save a file or create new tree
@@ -185,13 +184,13 @@ def treengine():
 
         else:    
             tree_data = request.get_json()
-
-            if (tree_data["name"]):
-                change_tree_name(tree_data["id"], tree_data["name"], db)
+            if 'tree_name' in tree_data and tree_data["tree_name"] != "":
+                change_tree_name(tree_data["id"], tree_data["tree_name"], db)
             elif (tree_data):
-                update_tree(result[0][1], tree_data, db)
+                update_tree(session["tree_id"], tree_data, db)
 
-        trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
-        result = trees.fetchall()
+        return redirect('/treengine')
+        # trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
+        # result = trees.fetchall()
 
     return render_template("treengine.html", tree_data=tree_data, result=result)
