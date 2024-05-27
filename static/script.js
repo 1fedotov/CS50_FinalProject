@@ -48,13 +48,27 @@ function update(root)
   svgRect = svg.node().getBoundingClientRect(); 
   width = svgRect.width;
   height = svgRect.height;
-  let initialX = width*0.125;
-  let initialY = height*0.70;
+  let initialX = width * -0.0;
+  let initialY = height * 0.75;
   treeContainer.selectAll("*").remove();
   treeContainer.attr("transform", `translate(${initialX},${initialY})`);
-  initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(initialScale);
+  initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(0.5);
 
-  let treeLayout = d3.tree().size([height, width*0.25]); // Setting tree size
+  let maxDepth = 0;
+  root.each(d => {
+      if (d.depth > maxDepth) {
+          maxDepth = d.depth;
+      }
+  });
+
+  // Setting tree size
+  //let treeLayout = d3.tree().size([height, width*0.25]);
+  let treeLayout = d3.tree().size([width * 2, height * 1.5])
+  .separation(function(a, b) {
+    return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
+  });
+
+  
 
   treeLayout(root); // Some treeLayout magic
 
@@ -242,8 +256,8 @@ function addNodes(node)
       console.log("creating children array");
       data.children = [];
     }
-  data.children.push({ name: "Parent1"});
-  data.children.push({ name: "Parent2"});
+  data.children.push({ name: {first : "Name", last: "Surname"}});
+  data.children.push({ name: {first : "Name", last: "Surname"}});
 
   root = d3.hierarchy(root.data);
 
