@@ -24,6 +24,7 @@
 }
   
 #mySVG {
+  position: relative;
   border-color: black;
   border-style: dashed;
 }
@@ -66,4 +67,11 @@
   background-color: white;
   border: 1px solid #ccc;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+.highlighted {
+  background-color: lightblue;
+}
+.normal {
+  background-color: transparent;
 }

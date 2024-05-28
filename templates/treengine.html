@@ -6,10 +6,10 @@
 </script>
 <div class="min-vh-100 d-flex flex-column">
   <div class="row flex-grow-1">
-    <div class="col-md-2 border">
+    <div class="col-md-2" style="position: absolute;">
       <nav class="nav flex-column">
         <form action="/treengine" method="POST">
-          <button id="create-button" type="submit" name="create-tree" class="btn btn-light">Create Tree</button>
+          <button id="create-button" type="submit" name="create-tree" class="btn btn-light btn-block" style="width: 100%;">Create Tree</button>
         </form>
         <!-- Default dropend button -->
         <div class="btn-group dropend">
@@ -20,7 +20,7 @@
             <!-- Dropdown menu links -->
             {% for row in result %}
               <li>
-                <a class="dropdown-item" href="/treengine?tree_id={{ row.id }}">{{ row.tree_name }}</a>
+                <a class="dropdown-item {{ 'highlighted' if row.id == tree_id else 'normal'}}" href="/treengine?tree_id={{ row.id }}">{{ row.tree_name }}</a>
                 <form action="/treengine" method="POST">
                   <button id="rename-button" type="submit" name="rename-tree" value="{{ row.id }}" class="btn btn-light">R</button>
                   <button id="delete-button" type="submit" name="delete-tree" value="{{ row.id }}" class="btn btn-light">D</button>
@@ -31,7 +31,7 @@
         </div>
       </nav>
     </div>
-    <svg class="col-md-10 border" id="tree-display"></svg>
+    <svg class="col-md-12 border" id="tree-display"></svg>
   </div>
 </div>
 <div id="context-menu" class="btn-group-vertical" role="group" aria-label="Vertical button group" style="position: absolute">

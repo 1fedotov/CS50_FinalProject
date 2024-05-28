@@ -72,10 +72,8 @@ def login():
         # Remember which user has logged in
         session["user_id"] = user[0]
 
-        flash("Signed in succesfully")
-
         # Redirect user to home page
-        return redirect("/")
+        return redirect("/treengine")
 
     else:    
         return render_template("/login.html")
@@ -133,18 +131,6 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/people", methods=["GET", "POST"])
-@login_required
-def people():
-    return render_template("")
-
-
-@app.route("/families", methods=["GET", "POST"])
-@login_required
-def families():
-    return render_template("")
-
-
 @app.route("/treengine", methods=["GET", "POST"])
 @login_required
 def treengine():
@@ -193,4 +179,4 @@ def treengine():
         # trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
         # result = trees.fetchall()
 
-    return render_template("treengine.html", tree_data=tree_data, result=result)
+    return render_template("treengine.html", tree_data=tree_data, result=result, tree_id=int(session["tree_id"]))

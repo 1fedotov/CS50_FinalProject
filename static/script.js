@@ -50,9 +50,9 @@ function update(root)
   height = svgRect.height;
   let initialX = width * -0.0;
   let initialY = height * 0.75;
-  treeContainer.selectAll("*").remove();
-  treeContainer.attr("transform", `translate(${initialX},${initialY})`);
-  initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(0.5);
+  // treeContainer.selectAll("*").remove();
+  // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
+  // initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(0.5);
 
   let maxDepth = 0;
   root.each(d => {
@@ -62,12 +62,18 @@ function update(root)
   });
 
   // Setting tree size
-  //let treeLayout = d3.tree().size([height, width*0.25]);
-  let treeLayout = d3.tree().size([width * 2, height * 1.5])
-  .separation(function(a, b) {
-    return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
-  });
+  //let treeLayout = d3.tree().size([height, width * 0.25]);
 
+  // let treeLayout = d3.tree().size([width * 2, height * 1.5])
+  // .separation(function(a, b) {
+  //   return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
+  // });
+
+  let treeLayout = d3.tree().nodeSize([350, 250]);
+
+  treeContainer.selectAll("*").remove();
+  treeContainer.attr("transform", `translate(${initialX},${initialY})`);
+  initialTransform = d3.zoomIdentity.translate(initialX + 625, initialY).scale(initialScale);
   
 
   treeLayout(root); // Some treeLayout magic
