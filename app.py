@@ -154,19 +154,22 @@ def treengine():
             else:
                 # Read about result object, it's structure and how to access element by column name, not index???
                 tree_data = get_last_tree(db)
-        
-    
+
+        return render_template("treengine.html", tree_data=tree_data, result=result, tree_id=int(session["tree_id"]))
+
     # User send request to save a file or create new tree
     if request.method == "POST":
 
         if "create-tree" in request.form:
             tree_data = create_tree("newTree", str(session["user_id"]), db)
+            return redirect('/treengine')
 
 
         elif "delete-tree" in request.form:
             id = request.form.get("delete-tree")
             delete_tree(id, db)
             tree_data = get_last_tree(db)
+            return redirect('/treengine')
 
         else:    
             tree_data = request.get_json()
@@ -175,8 +178,5 @@ def treengine():
             elif (tree_data):
                 update_tree(session["tree_id"], tree_data, db)
 
-        return redirect('/treengine')
         # trees = db.execute(text("SELECT * FROM trees WHERE user_id = :user_id"), [{"user_id" : session["user_id"]}])
         # result = trees.fetchall()
-
-    return render_template("treengine.html", tree_data=tree_data, result=result, tree_id=int(session["tree_id"]))

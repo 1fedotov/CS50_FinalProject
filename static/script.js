@@ -2,6 +2,8 @@
 
 // Initialize constants
 const initialScale = 1;
+const duration = 750;
+const radius = 10;
 
 // Initialize variables
 let svg = null;
@@ -16,6 +18,7 @@ let selectedCircle = null;
 let initialTransform = null;
 let root = null;
 
+
 //-----------------------------------------------------//
 
 document.addEventListener("DOMContentLoaded", function()
@@ -26,13 +29,88 @@ document.addEventListener("DOMContentLoaded", function()
   sidePanel = d3.select("#edit-person");
   treeContainer = svg.append("g");
 
+  svgRect = svg.node().getBoundingClientRect(); 
+  width = svgRect.width;
+  height = svgRect.height;
+  let initialX = width * -0.0;
+  let initialY = height * 0.75;
+
+  treeContainer.selectAll("*").remove();
+  treeContainer.attr("transform", `translate(${initialX},${initialY})`);
+  initialTransform = d3.zoomIdentity.translate(initialX + width/2, initialY).scale(initialScale);
   // Delete these lines later
   //console.log(tree_data);
   //d3.json(tree_data).then(function(treeData)
 
+
+  // Convert nested data into hierarchy  
+  root = d3.hierarchy(tree_data);
+  let treeLayout = d3.tree();
+  treeLayout(root);
+
+  update(root);
+
+
+    // Adding zoom and panning functionality, used AI for a direction and write ~70% of my own
+  var zoom = d3.zoom()      
+    .on("zoom", function(event) {
+      // Hide the menu  
+    hideAll();
+  
+    let transform = d3.event.transform;
+      
+    // Change cursor
+    if (transform.k - currentScale > 0) {
+      svg.style("cursor", "zoom-in");
+    } else if (transform.k - currentScale < 0) {
+      svg.style('cursor', 'zoom-out');
+    } else {
+      svg.style('cursor', 'grabbing');
+    }
+  
+    treeContainer.attr("transform", transform);
+  
+    currentScale = transform.k;
+    })
+    .on("end", function(event) {
+    svg.style("cursor", "default");
+    })
+  
+  // Using initial transform for preventing tree from "teleporting" while first panning
+  svg.call(zoom).call(zoom.transform, initialTransform);
+
+  // Add tree rename button functionality
+  let buttons = document.getElementsByName("rename-tree");
+  for(let i = 0; i < buttons.length; i++)
   {
-    root = d3.hierarchy(tree_data);
-    update(root);
+    buttons[i].addEventListener("click", function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+        
+      let treeId = this.value;
+      let aTag = this.parentElement.previousElementSibling;
+      let treeName = aTag.textContent;
+      let href = aTag.getAttribute("href");
+      aTag.innerHTML = `<input type="text" value="${treeName}">`;
+    
+      aTag.addEventListener("click", function(event) {
+        event.preventDefault();
+      })
+    
+      let input = aTag.querySelector("input");
+      input.addEventListener("blur", function (event) {
+        //event.preventDefault();
+        let newTreeName = this.value;
+        aTag.innerHTML = `<a class="dropdown-item" href="${href}">${newTreeName}</a>`;
+        postName(newTreeName, treeId);
+      })
+    
+      input.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          this.blur();
+        }
+      });
+    })
   }
     
   svg.on("click", hideAll);
@@ -44,12 +122,11 @@ document.addEventListener("DOMContentLoaded", function()
 // modified for the current application of tree visualization
 function update(root)
 {
-  svg = d3.select("#tree-display");
-  svgRect = svg.node().getBoundingClientRect(); 
-  width = svgRect.width;
-  height = svgRect.height;
-  let initialX = width * -0.0;
-  let initialY = height * 0.75;
+  // svgRect = svg.node().getBoundingClientRect(); 
+  // width = svgRect.width;
+  // height = svgRect.height;
+  // let initialX = width * -0.0;
+  // let initialY = height * 0.75;
   // treeContainer.selectAll("*").remove();
   // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
   // initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(0.5);
@@ -69,37 +146,38 @@ function update(root)
   //   return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
   // });
 
-  let treeLayout = d3.tree().nodeSize([350, 250]);
+  let treeLayout = d3.tree().nodeSize([350, 200]);
 
-  treeContainer.selectAll("*").remove();
-  treeContainer.attr("transform", `translate(${initialX},${initialY})`);
-  initialTransform = d3.zoomIdentity.translate(initialX + 625, initialY).scale(initialScale);
-  
+  // treeContainer.selectAll("*").remove();
+  // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
+  // initialTransform = d3.zoomIdentity.translate(initialX + width/2, initialY).scale(initialScale);
 
-  treeLayout(root); // Some treeLayout magic
+  console.log(`Root: ${root.x}`);
+  console.log(`treeLayout: ${treeLayout(root)}`);
 
-  // Initializing links
-  const links = treeContainer.selectAll(".link")
-    .data(root.links())
-    .enter().append("path")
-    .attr("class", "link")
-    .attr("d", d3.linkVertical()
-      .x(d => d.x)
-      .y(d => -d.y));
+  let treeData = treeLayout(root); // Compute the new positions of the nodes
+
+  console.log(`treeData: ${treeData.x}`);
+
+  // Normalize for fixed-depth.
+  //treeData.descendants().forEach(d => d.y = d.depth * 100);
   
   // Initializing nodes which contains graphic element + circle + text for each node object
   // Why do we need to add "g" element first, I don't know....   
-  const node = treeContainer.selectAll(".node")
-    .data(root.descendants())
-    .enter().append("g")
+  const node = treeContainer.selectAll("g.node")
+    .data(treeData.descendants());
+
+
+  // Enter new nodes at the parent's previous position.
+  let nodeEnter = node.enter().append('g')
     .attr("class", "node")
-    .attr("transform", d => `translate(${d.x},${-d.y})`);
+    .attr("transform", d => {
+      if (!d.parent) return `translate(${treeData.x},${-treeData.y})`;
+      else return `translate(${d.parent.x},${-d.parent.y})`;
+    });
 
-  
-  node.exit().remove(); // Some magic for deleting nodes "without information", AI suggestion
-
-  node.append("circle")
-    .attr("r", 10)
+  nodeEnter.append("circle")
+    .attr("r", 1e-6)
     .on("contextmenu", function(event) {  // Binding event for right click on circle
       let node = d3.select(this.parentNode);
       showContextMenu(d3.select(this), node);
@@ -121,80 +199,76 @@ function update(root)
       }
     });
 
-  node.append("text")
+  nodeEnter.append("text")
     .attr("dy", "0.35em")
     .attr("x", d => d.children ? -13 : 13)
     .style("text-anchor", d => d.children ? "end" : "start")
     .text(d => d.data.name.first + " " + d.data.name.last);   
 
-  // Merge new and updated elements
-  // node.merge(node.select("g"))
-  //     .transition()  // Apply transitions if needed
-  //     .duration(750)
-  //     .attr("transform", d => `translate(${d.x},${-d.y})`);
+  // Merge new and updated nodes
+  let nodeUpdate = nodeEnter.merge(node);
 
-  // Adding zoom and panning functionality, used AI for a direction and write ~70% of my own
-  var zoom = d3.zoom()      
-    .on("zoom", function(event) {
-      // Hide the menu  
-      hideAll();
-  
-      let transform = d3.event.transform;
-      
-      // Change cursor
-      if (transform.k - currentScale > 0) {
-        svg.style("cursor", "zoom-in");
-      } else if (transform.k - currentScale < 0) {
-        svg.style('cursor', 'zoom-out');
-      } else {
-        svg.style('cursor', 'grabbing');
-      }
-  
-      treeContainer.attr("transform", transform);
-  
-      currentScale = transform.k;
-    })
-    .on("end", function(event) {
-      svg.style("cursor", "default");
-  
-    })
-  
-  // Using initial transform for preventing tree from "teleporting" while first panning
-  svg.call(zoom).call(zoom.transform, initialTransform);
+  nodeUpdate.transition()
+    .duration(duration)
+    .attr("transform", d => `translate(${d.x},${-d.y})`);
 
-  // Add tree rename button functionality
-  let buttons = document.getElementsByName("rename-tree");
-  for(let i = 0; i < buttons.length; i++)
-    {
-      buttons[i].addEventListener("click", function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        let treeId = this.value;
-        let aTag = this.parentElement.previousElementSibling;
-        let treeName = aTag.textContent;
-        let href = aTag.getAttribute("href");
-        aTag.innerHTML = `<input type="text" value="${treeName}">`;
-    
-        aTag.addEventListener("click", function(event) {
-          event.preventDefault();
-        })
-    
-        let input = aTag.querySelector("input");
-        input.addEventListener("blur", function (event) {
-          //event.preventDefault();
-          let newTreeName = this.value;
-          aTag.innerHTML = `<a class="dropdown-item" href="${href}">${newTreeName}</a>`;
-          postName(newTreeName, treeId);
-        })
-    
-        input.addEventListener("keydown", function(event) {
-          if (event.key === "Enter") {
-            this.blur();
-          }
-        });
-      })
-    }
+  nodeUpdate.select("circle")
+    .attr('r', radius);
+
+  // Remove any exiting nodes
+  let nodeExit = node.exit().transition()
+    .duration(duration)
+    .attr('transform', d => {
+      if (!d.parent) return `translate(${treeData.x}), ${treeData.y})`;
+      else return `translate(${d.parent.x}, ${d.parent.y})`;})
+    .remove();
+
+  nodeExit.select('circle')
+    .attr('r', 1e-6);
+
+  nodeExit.select('text')
+    .style('fill-opacity', 1e-6);
+
+  // Initializing links
+  const links = treeContainer.selectAll('path.link')
+    .data(treeData.links());
+
+  let linkEnter = links.enter().insert('path', "g")
+    .attr('class', 'link')
+    .attr("d", d3.linkVertical()
+      .x(d => {
+        if (!d.parent) return treeData.x;
+        else return d.parent.x; })
+      .y(d => {
+        if (!d.parent) return -treeData.y;
+        else return -d.parent.y;}));
+  
+  // Merging new links
+  let linkUpdate = linkEnter.merge(links);
+
+  linkUpdate.transition()
+    .duration(duration)
+    .attr('d', d3.linkVertical()
+    .x(d => d.x)
+    .y(d => -d.y));
+
+  // Remove any exiting link
+  let linkExit = links.exit().transition()
+  .duration(duration)
+  .attr("d", d3.linkVertical()
+  .x(d => {
+    if (!d.parent) return treeData.x;
+    else return d.parent.x; })
+  .y(d => {
+    if (!d.parent) return -treeData.y;
+    else return -d.parent.y;}))
+  .remove();
+
+  treeData.descendants().forEach(d => {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+
 }
 
 function showContextMenu(circle, node)
