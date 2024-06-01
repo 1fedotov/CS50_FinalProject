@@ -146,7 +146,7 @@ function update(root)
   //   return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
   // });
 
-  let treeLayout = d3.tree().nodeSize([350, 200]);
+  let treeLayout = d3.tree().nodeSize([250, 250]);
 
   // treeContainer.selectAll("*").remove();
   // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
@@ -172,6 +172,7 @@ function update(root)
   let nodeEnter = node.enter().append('g')
     .attr("class", "node")
     .attr("transform", d => {
+      console.log(d.parent);
       if (!d.parent) return `translate(${treeData.x},${-treeData.y})`;
       else return `translate(${d.parent.x},${-d.parent.y})`;
     });
@@ -200,6 +201,7 @@ function update(root)
     });
 
   nodeEnter.append("text")
+    .attr("fill-opacity", 0)
     .attr("dy", "0.35em")
     .attr("x", d => d.children ? -13 : 13)
     .style("text-anchor", d => d.children ? "end" : "start")
@@ -212,22 +214,32 @@ function update(root)
     .duration(duration)
     .attr("transform", d => `translate(${d.x},${-d.y})`);
 
-  nodeUpdate.select("circle")
+  nodeUpdate.select("circle").transition()
+    .duration(duration)
     .attr('r', radius);
 
+  nodeUpdate.select("text").transition()
+    .duration(duration)
+    .attr("fill-opacity", 1)
+    .text(d => d.data.name.first + " " + d.data.name.last);   
+
   // Remove any exiting nodes
-  let nodeExit = node.exit().transition()
+  let nodeExit = node.exit();
+
+  nodeExit.select('circle').transition()
+    .duration(duration)
+    .attr('r', 0);
+
+  nodeExit.select('text').transition()
+    .duration(duration)
+    .attr('fill-opacity', 0);
+
+  nodeExit.transition()
     .duration(duration)
     .attr('transform', d => {
       if (!d.parent) return `translate(${treeData.x}), ${treeData.y})`;
       else return `translate(${d.parent.x}, ${d.parent.y})`;})
     .remove();
-
-  nodeExit.select('circle')
-    .attr('r', 1e-6);
-
-  nodeExit.select('text')
-    .style('fill-opacity', 1e-6);
 
   // Initializing links
   const links = treeContainer.selectAll('path.link')
@@ -235,10 +247,12 @@ function update(root)
 
   let linkEnter = links.enter().insert('path', "g")
     .attr('class', 'link')
+    .style("stroke-width", 0)
     .attr("d", d3.linkVertical()
       .x(d => {
+        console.log(`link parent x: ${d.parent? d.parent.x : treeData.x}; link parent y: ${d.parent? -d.parent.y : -treeData.y}`);
         if (!d.parent) return treeData.x;
-        else return d.parent.x; })
+        else return d.parent.x;})
       .y(d => {
         if (!d.parent) return -treeData.y;
         else return -d.parent.y;}));
@@ -250,11 +264,13 @@ function update(root)
     .duration(duration)
     .attr('d', d3.linkVertical()
     .x(d => d.x)
-    .y(d => -d.y));
+    .y(d => -d.y))
+    .style("stroke-width", 2);
 
   // Remove any exiting link
   let linkExit = links.exit().transition()
   .duration(duration)
+  .style("stroke-width", 0)
   .attr("d", d3.linkVertical()
   .x(d => {
     if (!d.parent) return treeData.x;
@@ -311,14 +327,12 @@ function hideAll()
 
 function selectCircle()
 { 
-  console.log("Circle selected");
   selectedCircle.style("stroke", "red");
   svg.style("cursor", "default");
 }
 
 function resetCircle()
 {
-  console.log("Circle reset");
   if (selectedCircle)
   {
     selectedCircle.style("stroke", "steelblue");
@@ -344,6 +358,8 @@ function addNodes(node)
   postChanges(root.data);
 
   update(root);
+
+  hideElement(contextMenu);
 }
 // Deleting node functionality, still need to read more about data and .data
 // While coding first times messed up with them
@@ -371,15 +387,15 @@ function deleteNode(node)
     }
   }
 
-  console.log("Removing node: " + parentNode.children[id].data.name)
   parentNode.data.children.splice(id, 1); // Remove the node
-  console.log("branch removed!");
 
   root = d3.hierarchy(root.data);
   
   postChanges(root.data);
 
   update(root);
+
+  hideElement(contextMenu);
 }
 
 function editNode(node)
@@ -417,7 +433,11 @@ function editNode(node)
     update(root);
 
     document.getElementById("update-person").removeEventListener("submit", updatePerson);
+
+    hideElement(sidePanel);
   }
+
+
 }
 
 // Completely taken from CS50.ai, still need to study this function
