@@ -38,9 +38,6 @@ document.addEventListener("DOMContentLoaded", function()
   treeContainer.selectAll("*").remove();
   treeContainer.attr("transform", `translate(${initialX},${initialY})`);
   initialTransform = d3.zoomIdentity.translate(initialX + width/2, initialY).scale(initialScale);
-  // Delete these lines later
-  //console.log(tree_data);
-  //d3.json(tree_data).then(function(treeData)
 
 
   // Convert nested data into hierarchy  
@@ -122,14 +119,6 @@ document.addEventListener("DOMContentLoaded", function()
 // modified for the current application of tree visualization
 function update(root)
 {
-  // svgRect = svg.node().getBoundingClientRect(); 
-  // width = svgRect.width;
-  // height = svgRect.height;
-  // let initialX = width * -0.0;
-  // let initialY = height * 0.75;
-  // treeContainer.selectAll("*").remove();
-  // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
-  // initialTransform = d3.zoomIdentity.translate(initialX, initialY).scale(0.5);
 
   let maxDepth = 0;
   root.each(d => {
@@ -138,35 +127,18 @@ function update(root)
       }
   });
 
-  // Setting tree size
-  //let treeLayout = d3.tree().size([height, width * 0.25]);
-
-  // let treeLayout = d3.tree().size([width * 2, height * 1.5])
-  // .separation(function(a, b) {
-  //   return a.depth == b.depth ? a.depth/maxDepth * 4 : 0.5;
-  // });
 
   let treeLayout = d3.tree().nodeSize([250, 250]);
-
-  // treeContainer.selectAll("*").remove();
-  // treeContainer.attr("transform", `translate(${initialX},${initialY})`);
-  // initialTransform = d3.zoomIdentity.translate(initialX + width/2, initialY).scale(initialScale);
 
   console.log(`Root: ${root.x}`);
   console.log(`treeLayout: ${treeLayout(root)}`);
 
   let treeData = treeLayout(root); // Compute the new positions of the nodes
-
-  console.log(`treeData: ${treeData.x}`);
-
-  // Normalize for fixed-depth.
-  //treeData.descendants().forEach(d => d.y = d.depth * 100);
   
   // Initializing nodes which contains graphic element + circle + text for each node object
   // Why do we need to add "g" element first, I don't know....   
   const node = treeContainer.selectAll("g.node")
     .data(treeData.descendants());
-
 
   // Enter new nodes at the parent's previous position.
   let nodeEnter = node.enter().append('g')
@@ -361,6 +333,7 @@ function addNodes(node)
 
   hideElement(contextMenu);
 }
+
 // Deleting node functionality, still need to read more about data and .data
 // While coding first times messed up with them
 function deleteNode(node)
